@@ -33,7 +33,7 @@
     main { padding: 0 12px; max-width: 1100px; width: 100%; margin: 0 auto; flex: 1; }
     .metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
     .metric-card { background: #fff; border: 2px solid #64748b; border-radius: 10px; padding: 10px; text-align: center; }
-    .metric-value { font-size: 18px; font-weight: 900; color: var(--blinkit-green); }
+    .metric-value { font-size: 14px; font-weight: 900; color: var(--blinkit-green); }
     .metric-label { font-size: 10px; font-weight: 800; color: #334155; text-transform: uppercase; }
 
     .search-wrapper { position: relative; margin-bottom: 12px; }
@@ -119,14 +119,14 @@
         <div class="metric-label">Searches</div>
       </div>
       <div class="metric-card">
-        <div class="metric-value" id="statusBadge" style="color: #b45309;">LOADING...</div>
+        <div class="metric-value" id="statusBadge" style="color: #b45309; font-size: 11px;">INIT...</div>
         <div class="metric-label">Status</div>
       </div>
     </div>
 
     <div class="search-wrapper">
       <span class="search-icon">⚡</span>
-      <input type="text" id="searchInput" class="search-input-box" placeholder="Loading CSV files in parallel..." autocomplete="off" disabled />
+      <input type="text" id="searchInput" class="search-input-box" placeholder="Initializing files..." autocomplete="off" disabled />
       <button class="clear-btn" id="clearBtn" onclick="resetSearch()">🗑️ Clear All</button>
       <div class="suggestions-list" id="suggestionsList"></div>
     </div>
@@ -198,47 +198,45 @@
     const totalCount = document.getElementById('totalCount');
     const chipContainer = document.getElementById('chipContainer');
 
-    const resTitle = document.getElementById('resTitle');
-    const resUPC = document.getElementById('resUPC');
-    const resItemId = document.getElementById('resItemId');
-    const resMRP = document.getElementById('resMRP');
-    const resUOM = document.getElementById('resUOM');
-
-    const qrCode = new QRCode(document.getElementById("qrcode"), { width: 140, height: 140, correctLevel: QRCode.CorrectLevel.L });
-
     window.addEventListener('DOMContentLoaded', () => {
       renderRecentChips();
       loadMultiPartCSV();
     });
 
-    function parseCSVFile(filePath) {
+    function parseCSVFile(filePath, label) {
       return new Promise((resolve, reject) => {
+        statusBadge.innerText = `DOWNLOADING ${label}`;
         Papa.parse(filePath, {
           download: true,
           skipEmptyLines: true,
           fastMode: true,
-          complete: (results) => resolve(results.data),
-          error: (err) => reject(err)
+          complete: (results) => {
+            resolve(results.data);
+          },
+          error: (err) => {
+            console.error(`Error loading ${filePath}:`, err);
+            reject(err);
+          }
         });
       });
     }
 
     async function loadMultiPartCSV() {
-      statusBadge.innerText = "LOADING...";
-      statusBadge.style.color = "#b45309";
-
       try {
         const [data1, data2] = await Promise.all([
-          parseCSVFile(FILE_PART_1),
-          parseCSVFile(FILE_PART_2)
+          parseCSVFile(FILE_PART_1, "PART 1"),
+          parseCSVFile(FILE_PART_2, "PART 2")
         ]);
 
+        statusBadge.innerText = "PARSING...";
         processRows(data1, true);
         processRows(data2, false);
 
         finalizeLoad();
       } catch (err) {
-        showError();
+        statusBadge.innerText = "FAILED";
+        statusBadge.style.color = "#dc2626";
+        searchInput.placeholder = "Error: Check file names or GitHub paths!";
       }
     }
 
@@ -270,13 +268,9 @@
         searchInput.disabled = false;
         searchInput.placeholder = "Search products, UPCs, or Item IDs...";
       } else {
-        showError();
+        statusBadge.innerText = "EMPTY";
+        statusBadge.style.color = "#dc2626";
       }
-    }
-
-    function showError() {
-      statusBadge.innerText = "ERROR";
-      statusBadge.style.color = "#dc2626";
     }
 
     function renderRecentChips() {
@@ -333,6 +327,13 @@
         suggestionsList.classList.add('active');
       }, 80);
     });
+
+    const qrCode = new QRCode(document.getElementById("qrcode"), { width: 140, height: 140, correctLevel: QRCode.CorrectLevel.L });
+    const resTitle = document.getElementById('resTitle');
+    const resUPC = document.getElementById('resUPC');
+    const resItemId = document.getElementById('resItemId');
+    const resMRP = document.getElementById('resMRP');
+    const resUOM = document.getElementById('resUOM');
 
     function selectProduct(id) {
       const match = productList.find(item => item.upc === id || item.item_id === id);
