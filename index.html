@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Blinkit Store UPC Terminal Web</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     :root {
@@ -404,9 +403,7 @@
       transition: transform 0.15s ease;
     }
 
-    .map-link-btn:active {
-      transform: scale(0.97);
-    }
+    .map-link-btn:active { transform: scale(0.97); }
 
     footer {
       text-align: center;
@@ -542,7 +539,7 @@
     let searchCount = 0;
     const defaultChips = ['KitKat', 'Amul Milk', 'Maggi', 'Coca Cola', 'Lays Chips', 'Surf Excel'];
 
-    const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1Hsb99ak1te_2Oww6hCjUo8VBZastiDj30pAzO7RioK4/export?format=csv';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzQAONQQMY0P_YURqkwglUTpPs4s4e-nIXXHGjn42U7AENv8KVhwCf1iycK-hPDFTA/exec';
 
     const searchInput = document.getElementById('searchInput');
     const clearBtn = document.getElementById('clearBtn');
@@ -568,24 +565,21 @@
     window.addEventListener('DOMContentLoaded', () => {
       renderRecentChips();
 
-      Papa.parse(GOOGLE_SHEET_CSV_URL, {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-          productList = results.data;
+      fetch(API_URL)
+        .then(response => response.json())
+        .then(data => {
+          productList = data;
           totalCount.innerText = productList.length.toLocaleString();
           statusBadge.innerText = "READY";
           statusBadge.style.color = "#15803d";
           searchInput.disabled = false;
           searchInput.placeholder = "Search products, UPCs, or Item IDs...";
-        },
-        error: function(err) {
+        })
+        .catch(err => {
           statusBadge.innerText = "ERROR";
           statusBadge.style.color = "#dc2626";
-          console.error("Failed to load inventory sync:", err);
-        }
-      });
+          console.error("API sync failed:", err);
+        });
     });
 
     function getSearchHistory() {
@@ -643,9 +637,9 @@
 
       for (let i = 0; i < productList.length; i++) {
         const item = productList[i];
-        const nameLower = (item.name || '').toLowerCase();
-        const upcMatch = (item.upc || '').toLowerCase().includes(query);
-        const idMatch = (item.item_id || '').toLowerCase().includes(query);
+        const nameLower = String(item.name || '').toLowerCase();
+        const upcMatch = String(item.upc || '').toLowerCase().includes(query);
+        const idMatch = String(item.item_id || '').toLowerCase().includes(query);
         const nameMatch = queryWords.every(word => nameLower.includes(word));
 
         if (nameMatch || upcMatch || idMatch) {
@@ -675,7 +669,7 @@
     }
 
     function selectProduct(identifier) {
-      const match = productList.find(item => item.upc === identifier || item.item_id === identifier);
+      const match = productList.find(item => String(item.upc) === String(identifier) || String(item.item_id) === String(identifier));
       if (match) {
         searchInput.value = match.name;
         suggestionsList.classList.remove('active');
@@ -698,6 +692,12 @@
       resUOM.innerText = match.variant_uom_text || 'N/A';
 
       qrCode.clear();
-      if (match.upc) qrCode.makeCode(match.upc);
+      if (match.upc) qrCode.makeCode(String(match.upc));
 
- 
+      resultCard.classList.add('active');
+    }
+
+    function resetSearch() {
+      searchInput.value = '';
+      clearBtn.style.display = 'none';
+      sugge
