@@ -4,427 +4,82 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Blinkit Store UPC Terminal Web</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
     :root {
       --blinkit-yellow: #f8c200;
       --blinkit-green: #0c831f;
       --blinkit-dark: #000000;
-      --blinkit-card-bg: #111111;
       --blinkit-gray: #f8fafc;
-      --blinkit-border: #cbd5e1;
       --text-dark: #020617;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--blinkit-gray); color: var(--text-dark); display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 24px; }
 
-    body {
-      background-color: var(--blinkit-gray);
-      color: var(--text-dark);
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      padding-bottom: 24px;
-    }
+    .ticker-bar { width: 100%; height: 36px; background: var(--blinkit-dark); color: var(--blinkit-yellow); overflow: hidden; display: flex; align-items: center; border-top: 3px solid var(--blinkit-yellow); border-bottom: 2px solid var(--blinkit-yellow); margin-bottom: 12px; }
+    .ticker-track { display: inline-block; white-space: nowrap; animation: marquee 12s linear infinite; }
+    .ticker-item { font-size: 12px; font-weight: 900; padding: 0 24px; }
+    @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
 
-    .ticker-bar {
-      width: 100%;
-      height: 36px;
-      background: var(--blinkit-dark);
-      color: var(--blinkit-yellow);
-      overflow: hidden;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      border-top: 3px solid var(--blinkit-yellow);
-      border-bottom: 2px solid var(--blinkit-yellow);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-      margin-bottom: 12px;
-    }
+    header { background-color: #000; padding: 14px 18px; border-radius: 12px; max-width: 1100px; width: calc(100% - 24px); margin: 0 auto 12px auto; border: 1px solid #333; }
+    .header-banner { display: flex; justify-content: space-between; align-items: center; }
+    .header-title { color: var(--blinkit-yellow); font-size: 18px; font-weight: 900; text-transform: uppercase; }
+    .header-subtitle { color: #cbd5e1; font-size: 11px; font-weight: 600; }
+    .live-badge { display: inline-flex; align-items: center; gap: 6px; background: #003311; border: 1px solid #2bf055; color: #2bf055; font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 20px; }
+    .live-dot { width: 8px; height: 8px; background-color: #2bf055; border-radius: 50%; box-shadow: 0 0 8px #2bf055; }
 
-    .ticker-track {
-      display: inline-block;
-      white-space: nowrap;
-      animation: marquee 12s linear infinite;
-      will-change: transform;
-    }
+    main { padding: 0 12px; max-width: 1100px; width: 100%; margin: 0 auto; flex: 1; }
+    .metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+    .metric-card { background: #fff; border: 2px solid #64748b; border-radius: 10px; padding: 10px; text-align: center; }
+    .metric-value { font-size: 18px; font-weight: 900; color: var(--blinkit-green); }
+    .metric-label { font-size: 10px; font-weight: 800; color: #334155; text-transform: uppercase; }
 
-    .ticker-item {
-      font-size: 12px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      padding: 0 24px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
+    .search-wrapper { position: relative; margin-bottom: 12px; }
+    .search-input-box { width: 100%; height: 52px; padding: 0 110px 0 42px; border-radius: 10px; border: 2px solid #020617; font-size: 14px; font-weight: 800; outline: none; background: #fff; }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; }
+    .clear-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #fee2e2; border: 1.5px solid #ef4444; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 900; color: #991b1b; display: none; cursor: pointer; }
 
-    @keyframes marquee {
-      0% { transform: translateX(0%); }
-      100% { transform: translateX(-50%); }
-    }
-
-    header {
-      background-color: #000000;
-      padding: 14px 18px;
-      border-radius: 12px;
-      max-width: 1100px;
-      width: calc(100% - 24px);
-      margin: 0 auto 12px auto;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      border: 1px solid #333333;
-    }
-
-    .header-banner {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .header-title-group { text-align: left; }
-
-    .header-title {
-      color: var(--blinkit-yellow);
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
-    }
-
-    .header-subtitle {
-      color: #cbd5e1;
-      font-size: 11px;
-      font-weight: 600;
-      margin-top: 2px;
-    }
-
-    .live-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #003311;
-      border: 1px solid #2bf055;
-      color: #2bf055;
-      font-size: 11px;
-      font-weight: 800;
-      padding: 5px 12px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .live-dot {
-      width: 8px;
-      height: 8px;
-      background-color: #2bf055;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #2bf055;
-    }
-
-    main {
-      padding: 0 12px;
-      max-width: 1100px;
-      width: 100%;
-      margin: 0 auto;
-      flex: 1;
-    }
-
-    .metrics-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .metric-card {
-      background: #ffffff;
-      border: 2px solid #64748b;
-      border-radius: 10px;
-      padding: 10px;
-      text-align: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.04);
-    }
-
-    .metric-value {
-      font-size: 18px;
-      font-weight: 900;
-      color: var(--blinkit-green);
-    }
-
-    .metric-label {
-      font-size: 10px;
-      font-weight: 800;
-      color: #334155;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-
-    .search-wrapper {
-      position: relative;
-      margin-bottom: 12px;
-    }
-
-    .search-input-box {
-      width: 100%;
-      height: 52px;
-      padding: 0 110px 0 42px;
-      border-radius: 10px;
-      border: 2px solid #020617;
-      background-color: #ffffff;
-      font-size: 14px;
-      font-weight: 800;
-      outline: none;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-      color: #020617;
-    }
-
-    .search-input-box:focus { border-color: var(--blinkit-green); }
-
-    .search-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 18px;
-    }
-
-    .clear-btn {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: #fee2e2;
-      border: 1.5px solid #ef4444;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 900;
-      color: #991b1b;
-      display: none;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-    }
-
-    .suggestions-list {
-      position: absolute;
-      top: 56px;
-      left: 0;
-      right: 0;
-      background: #ffffff;
-      border: 2px solid #000000;
-      border-radius: 10px;
-      max-height: 360px;
-      overflow-y: auto;
-      box-shadow: 0 12px 28px rgba(0,0,0,0.25);
-      z-index: 1000;
-      display: none;
-    }
-
+    .suggestions-list { position: absolute; top: 56px; left: 0; right: 0; background: #fff; border: 2px solid #000; border-radius: 10px; max-height: 360px; overflow-y: auto; z-index: 1000; display: none; }
     .suggestions-list.active { display: block; }
-
-    .suggestion-item {
-      padding: 10px 14px;
-      border-bottom: 1px solid #cbd5e1;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
+    .suggestion-item { padding: 10px 14px; border-bottom: 1px solid #cbd5e1; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
     .suggestion-item:hover { background-color: #f1f5f9; }
-
-    .sugg-name {
-      font-size: 13px;
-      font-weight: 800;
-      color: #020617;
-    }
-
+    .sugg-name { font-size: 13px; font-weight: 800; }
     .sugg-meta { display: flex; gap: 6px; }
-
-    .tag-badge {
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 800;
-    }
-
+    .tag-badge { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 800; }
     .tag-upc { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
     .tag-itemid { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
     .tag-mrp { background: #fef3c7; color: #b45309; border: 1px solid #fde047; }
 
-    .idle-section {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
+    .idle-section { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .widget-box { background: #fff; border: 2px solid #cbd5e1; border-radius: 12px; padding: 14px; }
+    .widget-title { font-size: 11px; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; }
+    .chip-container { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { background: #e2e8f0; border: 1.5px solid #94a3b8; padding: 6px 12px; border-radius: 18px; font-size: 11px; font-weight: 800; cursor: pointer; }
 
-    .widget-box {
-      background: #ffffff;
-      border: 2px solid #cbd5e1;
-      border-radius: 12px;
-      padding: 14px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-    }
+    .upc-result-card { background: #fff; border-radius: 12px; border: 2px solid #020617; padding: 16px; display: none; margin-bottom: 12px; }
+    .upc-result-card.active { display: grid; grid-template-columns: 160px 1fr; gap: 16px; align-items: center; }
+    .prod-title { font-size: 16px; font-weight: 900; grid-column: span 2; }
+    .qr-container { background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #cbd5e1; display: flex; justify-content: center; }
+    .data-grid { width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .data-item { background: #f8fafc; border: 1px solid #94a3b8; padding: 8px 10px; border-radius: 8px; display: flex; flex-direction: column; }
+    .data-item.full-width { grid-column: span 2; background: #f0fdf4; border-color: #4ade80; }
+    .data-label { font-size: 9px; font-weight: 800; color: #334155; text-transform: uppercase; }
+    .data-value { font-size: 13px; font-weight: 800; }
 
-    .widget-title {
-      font-size: 11px;
-      font-weight: 900;
-      color: #0f172a;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 10px;
-    }
+    .map-btn-container { margin-top: 14px; text-align: center; }
+    .map-link-btn { display: inline-flex; align-items: center; background: var(--blinkit-dark); color: var(--blinkit-yellow); border: 2px solid var(--blinkit-yellow); padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 900; text-decoration: none; text-transform: uppercase; }
 
-    .chip-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .chip {
-      background: #e2e8f0;
-      border: 1.5px solid #94a3b8;
-      padding: 6px 12px;
-      border-radius: 18px;
-      font-size: 11px;
-      font-weight: 800;
-      color: #0f172a;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      transition: all 0.15s ease;
-    }
-
-    .chip:hover {
-      background: var(--blinkit-yellow);
-      border-color: #000000;
-    }
-
-    .upc-result-card {
-      background: #ffffff;
-      border-radius: 12px;
-      border: 2px solid #020617;
-      padding: 16px;
-      display: none;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-      margin-bottom: 12px;
-    }
-
-    .upc-result-card.active {
-      display: grid;
-      grid-template-columns: 160px 1fr;
-      gap: 16px;
-      align-items: center;
-    }
-
-    .prod-title {
-      font-size: 16px;
-      font-weight: 900;
-      color: #020617;
-      grid-column: span 2;
-    }
-
-    .qr-container {
-      background: #ffffff;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #cbd5e1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .data-grid {
-      width: 100%;
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
-
-    .data-item {
-      background: #f8fafc;
-      border: 1px solid #94a3b8;
-      padding: 8px 10px;
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .data-item.full-width {
-      grid-column: span 2;
-      background: #f0fdf4;
-      border-color: #4ade80;
-    }
-
-    .data-label {
-      font-size: 9px;
-      font-weight: 800;
-      color: #334155;
-      text-transform: uppercase;
-      margin-bottom: 2px;
-    }
-
-    .data-value {
-      font-size: 13px;
-      font-weight: 800;
-      color: #020617;
-      word-break: break-word;
-    }
-
-    .map-btn-container {
-      margin-top: 14px;
-      text-align: center;
-    }
-
-    .map-link-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      background: var(--blinkit-dark);
-      color: var(--blinkit-yellow);
-      border: 2px solid var(--blinkit-yellow);
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 900;
-      text-decoration: none;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.12);
-      transition: transform 0.15s ease;
-    }
-
-    .map-link-btn:active { transform: scale(0.97); }
-
-    footer {
-      text-align: center;
-      padding: 16px 0 8px 0;
-      font-size: 11px;
-      color: #475569;
-    }
-
+    footer { text-align: center; padding: 16px 0 8px 0; font-size: 11px; color: #475569; }
     footer .credit-name { font-weight: 900; color: #020617; }
     footer .brand-tag { color: var(--blinkit-green); font-weight: 900; }
 
     @media (max-width: 768px) {
-      body { padding-top: 0px; }
       .header-banner { flex-direction: column; gap: 6px; text-align: center; }
-      .header-title-group { text-align: center; }
-      .header-title { font-size: 15px; }
       .idle-section { grid-template-columns: 1fr; }
       .upc-result-card.active { grid-template-columns: 1fr; }
       .prod-title { grid-column: span 1; text-align: center; }
-      .suggestion-item { flex-direction: column; align-items: flex-start; gap: 4px; }
     }
   </style>
 </head>
@@ -443,13 +98,12 @@
 
   <header>
     <div class="header-banner">
-      <div class="header-title-group">
+      <div>
         <div class="header-title">BLINKIT STORE UPC TERMINAL</div>
         <div class="header-subtitle">SS, George Town, Prayagraj — Inventory Search</div>
       </div>
       <div class="live-badge">
-        <span class="live-dot"></span>
-        CLOUD DATABASE ACTIVE
+        <span class="live-dot"></span> CLOUD DATABASE ACTIVE
       </div>
     </div>
   </header>
@@ -465,44 +119,37 @@
         <div class="metric-label">Searches</div>
       </div>
       <div class="metric-card">
-        <div class="metric-value" id="statusBadge" style="color: #b45309;">LOADING</div>
+        <div class="metric-value" id="statusBadge" style="color: #b45309;">LOADING 1/2</div>
         <div class="metric-label">Status</div>
       </div>
     </div>
 
     <div class="search-wrapper">
       <span class="search-icon">⚡</span>
-      <input type="text" id="searchInput" class="search-input-box" placeholder="Loading terminal inventory..." autocomplete="off" disabled />
+      <input type="text" id="searchInput" class="search-input-box" placeholder="Loading CSV parts from GitHub..." autocomplete="off" disabled />
       <button class="clear-btn" id="clearBtn" onclick="resetSearch()">🗑️ Clear All</button>
       <div class="suggestions-list" id="suggestionsList"></div>
     </div>
 
     <div class="upc-result-card" id="resultCard">
       <div class="prod-title" id="resTitle">📦 Product Name</div>
-      
-      <div class="qr-container">
-        <div id="qrcode"></div>
-      </div>
-
+      <div class="qr-container"><div id="qrcode"></div></div>
       <div class="data-grid">
         <div class="data-item full-width">
           <span class="data-label">🔍 UPC Code</span>
           <span class="data-value" id="resUPC" style="color:var(--blinkit-green); font-size:15px;">------------</span>
         </div>
-
         <div class="data-item">
           <span class="data-label">🆔 Item ID</span>
           <span class="data-value" id="resItemId">---</span>
         </div>
-
         <div class="data-item">
           <span class="data-label">🏷️ MRP</span>
           <span class="data-value" id="resMRP">---</span>
         </div>
-
-        <div class="data-item full-width" style="background:#f8fafc; border-color:#94a3b8;">
-          <span class="data-label" style="color:#334155;">⚖️ Pack / Unit (UOM)</span>
-          <span class="data-value" id="resUOM" style="font-size:12px; color:#020617;">---</span>
+        <div class="data-item full-width">
+          <span class="data-label">⚖️ Pack / Unit (UOM)</span>
+          <span class="data-value" id="resUOM">---</span>
         </div>
       </div>
     </div>
@@ -512,11 +159,10 @@
         <div class="widget-title">🔥 Frequent Searches</div>
         <div class="chip-container" id="chipContainer"></div>
       </div>
-
       <div class="widget-box">
         <div class="widget-title">⚡ Terminal Info</div>
         <div style="font-size: 12px; color: #334155; line-height: 1.5; font-weight: 700;">
-          • Synchronized directly with store terminal database.<br/>
+          • Multi-part CSV loaded directly via GitHub relative path.<br/>
           • Enter product name, UPC barcode, or Item ID above.<br/>
           • Auto-generates scannable QR code instantly.
         </div>
@@ -536,12 +182,12 @@
   </footer>
 
   <script>
+    const FILE_PART_1 = "UPC-part-001.csv";
+    const FILE_PART_2 = "UPC-part-002.csv";
+
     let productList = [];
     let searchCount = 0;
     const defaultChips = ['KitKat', 'Amul Milk', 'Maggi', 'Coca Cola', 'Lays Chips', 'Surf Excel'];
-
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyFKRkc04t5DM_WPSjhQw7SJqGBi7cEpfXUCF_kwss0Yk35ga_3Du6BTlM-f5sy4ky4/exec';
-    const CSV_FALLBACK = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTj-I2G_5nNlFq-1RkH2vM3lYqV6xL/pub?output=csv';
 
     const searchInput = document.getElementById('searchInput');
     const clearBtn = document.getElementById('clearBtn');
@@ -558,87 +204,90 @@
     const resMRP = document.getElementById('resMRP');
     const resUOM = document.getElementById('resUOM');
 
-    const qrCode = new QRCode(document.getElementById("qrcode"), {
-      width: 140,
-      height: 140,
-      correctLevel: QRCode.CorrectLevel.L
-    });
+    const qrCode = new QRCode(document.getElementById("qrcode"), { width: 140, height: 140, correctLevel: QRCode.CorrectLevel.L });
 
     window.addEventListener('DOMContentLoaded', () => {
       renderRecentChips();
-      loadInventoryData();
+      loadMultiPartCSV();
     });
 
-    function loadInventoryData() {
-      // 1. Try Apps Script API first
-      fetch(API_URL, { redirect: 'follow' })
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.length > 0) {
-            initProducts(data);
-          } else {
-            throw new Error('Empty payload');
-          }
-        })
-        .catch(err => {
-          console.warn('Apps Script failed or pending, using CSV fallback...', err);
-          // 2. Fallback to direct CSV parsing via PapaParse
-          Papa.parse("https://docs.google.com/spreadsheets/d/1Hsb99ak1te_2Oww6hCjUo8VBZastiDj30pAzO7RioK4/export?format=csv", {
+    function loadMultiPartCSV() {
+      statusBadge.innerText = "LOADING 1/2";
+      statusBadge.style.color = "#b45309";
+
+      Papa.parse(FILE_PART_1, {
+        download: true,
+        skipEmptyLines: true,
+        complete: function(results1) {
+          processRows(results1.data);
+          
+          statusBadge.innerText = "LOADING 2/2";
+          Papa.parse(FILE_PART_2, {
             download: true,
-            header: true,
             skipEmptyLines: true,
-            complete: function(results) {
-              if (results.data && results.data.length > 0) {
-                initProducts(results.data);
-              } else {
-                showErrorStatus();
-              }
+            complete: function(results2) {
+              processRows(results2.data);
+              finalizeLoad();
             },
             error: function() {
-              showErrorStatus();
+              showError();
             }
           });
-        });
+        },
+        error: function() {
+          showError();
+        }
+      });
     }
 
-    function initProducts(data) {
-      productList = data;
-      totalCount.innerText = productList.length.toLocaleString();
-      statusBadge.innerText = "READY";
-      statusBadge.style.color = "#15803d";
-      searchInput.disabled = false;
-      searchInput.placeholder = "Search products, UPCs, or Item IDs...";
+    function processRows(rows) {
+      if (!rows || rows.length === 0) return;
+
+      const startIndex = (productList.length === 0) ? 1 : 0;
+
+      for (let i = startIndex; i < rows.length; i++) {
+        const row = rows[i];
+        if (row.length >= 2) {
+          const item_id = String(row[0] || '').trim();
+          const upc = String(row[1] || '').trim();
+          const name = String(row[2] || '').trim();
+          const variant_mrp = String(row[3] || '').trim();
+          const variant_uom_text = String(row[4] || '').trim();
+
+          if (name || upc || item_id) {
+            productList.push({ item_id, upc, name, variant_mrp, variant_uom_text });
+          }
+        }
+      }
     }
 
-    function showErrorStatus() {
+    function finalizeLoad() {
+      if (productList.length > 0) {
+        totalCount.innerText = productList.length.toLocaleString();
+        statusBadge.innerText = "READY";
+        statusBadge.style.color = "#15803d";
+        searchInput.disabled = false;
+        searchInput.placeholder = "Search products, UPCs, or Item IDs...";
+      } else {
+        showError();
+      }
+    }
+
+    function showError() {
       statusBadge.innerText = "ERROR";
       statusBadge.style.color = "#dc2626";
     }
 
-    function getSearchHistory() {
-      const history = localStorage.getItem('blinkit_frequent_searches');
-      return history ? JSON.parse(history) : [];
-    }
-
-    function saveToHistory(term) {
-      if (!term || term.trim().length < 2) return;
-      let history = getSearchHistory();
-      history = history.filter(item => item.toLowerCase() !== term.toLowerCase());
-      history.unshift(term);
-      if (history.length > 6) history.pop();
-      localStorage.setItem('blinkit_frequent_searches', JSON.stringify(history));
-      renderRecentChips();
-    }
-
     function renderRecentChips() {
-      const history = getSearchHistory();
-      const chipsToDisplay = history.length > 0 ? history : defaultChips;
       chipContainer.innerHTML = '';
-      chipsToDisplay.forEach(term => {
+      defaultChips.forEach(term => {
         const chip = document.createElement('span');
         chip.className = 'chip';
         chip.innerText = term;
-        chip.onclick = () => quickSearch(term);
+        chip.onclick = () => {
+          searchInput.value = term;
+          searchInput.dispatchEvent(new Event('input'));
+        };
         chipContainer.appendChild(chip);
       });
     }
@@ -656,78 +305,55 @@
         return;
       }
 
-      debounceTimer = setTimeout(() => showSuggestions(query), 80);
+      debounceTimer = setTimeout(() => {
+        const queryWords = query.split(' ').filter(w => w);
+        const matches = productList.filter(item => {
+          const nameLower = (item.name || '').toLowerCase();
+          const upcMatch = (item.upc || '').toLowerCase().includes(query);
+          const idMatch = (item.item_id || '').toLowerCase().includes(query);
+          const nameMatch = queryWords.every(word => nameLower.includes(word));
+          return nameMatch || upcMatch || idMatch;
+        }).slice(0, 12);
+
+        if (matches.length === 0) {
+          suggestionsList.innerHTML = '<div class="suggestion-item"><span class="sugg-name">No matching products found</span></div>';
+        } else {
+          suggestionsList.innerHTML = matches.map(item => `
+            <div class="suggestion-item" onclick="selectProduct('${item.upc || item.item_id}')">
+              <div class="sugg-name">📦 ${item.name || 'Unnamed Product'}</div>
+              <div class="sugg-meta">
+                <span class="tag-badge tag-upc">UPC: ${item.upc || 'N/A'}</span>
+                <span class="tag-badge tag-itemid">ID: ${item.item_id || 'N/A'}</span>
+                <span class="tag-badge tag-mrp">₹${item.variant_mrp || '--'}</span>
+              </div>
+            </div>
+          `).join('');
+        }
+        suggestionsList.classList.add('active');
+      }, 80);
     });
 
-    function quickSearch(term) {
-      searchInput.value = term;
-      searchInput.dispatchEvent(new Event('input'));
-    }
-
-    function showSuggestions(query) {
-      const queryWords = query.split(' ').filter(w => w);
-      let matches = [];
-
-      for (let i = 0; i < productList.length; i++) {
-        const item = productList[i];
-        const nameLower = String(item.name || '').toLowerCase();
-        const upcMatch = String(item.upc || '').toLowerCase().includes(query);
-        const idMatch = String(item.item_id || '').toLowerCase().includes(query);
-        const nameMatch = queryWords.every(word => nameLower.includes(word));
-
-        if (nameMatch || upcMatch || idMatch) {
-          matches.push(item);
-          if (matches.length >= 12) break;
-        }
-      }
-
-      if (matches.length === 0) {
-        suggestionsList.innerHTML = '<div class="suggestion-item"><span class="sugg-name">No matching products found</span></div>';
-        suggestionsList.classList.add('active');
-        return;
-      }
-
-      suggestionsList.innerHTML = matches.map(item => `
-        <div class="suggestion-item" onclick="selectProduct('${item.upc || item.item_id}')">
-          <div class="sugg-name">📦 ${item.name || 'Unnamed Product'}</div>
-          <div class="sugg-meta">
-            <span class="tag-badge tag-upc">UPC: ${item.upc || 'N/A'}</span>
-            <span class="tag-badge tag-itemid">Item ID: ${item.item_id || 'N/A'}</span>
-            <span class="tag-badge tag-mrp">MRP: ₹${item.variant_mrp || '--'}</span>
-          </div>
-        </div>
-      `).join('');
-
-      suggestionsList.classList.add('active');
-    }
-
-    function selectProduct(identifier) {
-      const match = productList.find(item => String(item.upc) === String(identifier) || String(item.item_id) === String(identifier));
+    function selectProduct(id) {
+      const match = productList.find(item => item.upc === id || item.item_id === id);
       if (match) {
         searchInput.value = match.name;
         suggestionsList.classList.remove('active');
-        clearBtn.style.display = 'inline-flex';
         idleSection.style.display = 'none';
-        
-        saveToHistory(match.name);
+
         searchCount++;
         document.getElementById('scannedCount').innerText = searchCount;
 
-        displayResultCard(match);
+        resTitle.innerText = `📦 ${match.name || 'Unnamed Product'}`;
+        resUPC.innerText = match.upc || 'N/A';
+        resItemId.innerText = match.item_id || 'N/A';
+        resMRP.innerText = match.variant_mrp ? `₹${match.variant_mrp}` : 'N/A';
+        resUOM.innerText = match.variant_uom_text || 'N/A';
+
+        qrCode.clear();
+        if (match.upc) qrCode.makeCode(String(match.upc));
+
+        resultCard.classList.add('active');
       }
-    }
-
-    function displayResultCard(match) {
-      resTitle.innerText = `📦 ${match.name || 'Unnamed Product'}`;
-      resUPC.innerText = match.upc || 'N/A';
-      resItemId.innerText = match.item_id || 'N/A';
-      resMRP.innerText = match.variant_mrp ? `₹${match.variant_mrp}` : 'N/A';
-      resUOM.innerText = match.variant_uom_text || 'N/A';
-
-      qrCode.clear();
-      if (match.upc) qrCode.makeCode(String(match.upc));
-
-      resultCard.classList.add('active');
     }
 
     function resetSearch() {
@@ -736,14 +362,7 @@
       suggestionsList.classList.remove('active');
       resultCard.classList.remove('active');
       idleSection.style.display = 'grid';
-      renderRecentChips();
     }
-
-    document.addEventListener('click', (e) => {
-      if (!searchInput.contains(e.target) && !suggestionsList.contains(e.target)) {
-        suggestionsList.classList.remove('active');
-      }
-    });
   </script>
 </body>
 </html>
