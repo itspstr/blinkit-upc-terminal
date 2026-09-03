@@ -6,6 +6,7 @@
   <title>Blinkit Store UPC Terminal Web</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
   <style>
     :root {
       --blinkit-yellow: #f8c200;
@@ -34,7 +35,6 @@
       padding-bottom: 24px;
     }
 
-    /* High-Contrast Top Ticker Bar */
     .ticker-bar {
       width: 100%;
       height: 36px;
@@ -170,7 +170,6 @@
       margin-top: 4px;
     }
 
-    /* Responsive Search Input */
     .search-wrapper {
       position: relative;
       margin-bottom: 16px;
@@ -277,13 +276,6 @@
     .tag-upc { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
     .tag-itemid { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
     .tag-mrp { background: #fef3c7; color: #b45309; border: 1px solid #fde047; }
-
-    /* Main Desktop & Web Layout */
-    .dashboard-layout {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
 
     .idle-section {
       display: grid;
@@ -414,7 +406,6 @@
     footer .credit-name { font-weight: 900; color: #020617; }
     footer .brand-tag { color: var(--blinkit-green); font-weight: 900; }
 
-    /* Mobile Responsive Breakpoints */
     @media (max-width: 768px) {
       body {
         padding-top: max(env(safe-area-inset-top), 40px);
@@ -585,23 +576,35 @@
     window.addEventListener('DOMContentLoaded', () => {
       renderRecentChips();
 
-      Papa.parse('UPC.csv', {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-          productList = results.data;
-          totalCount.innerText = productList.length.toLocaleString();
-          statusBadge.innerText = "READY";
-          statusBadge.style.color = "#15803d";
-          searchInput.disabled = false;
-          searchInput.placeholder = "Search 400k+ products, UPCs, or Item IDs...";
-        },
-        error: function(err) {
+      // Fetch and decompress compressed_data.csv.gz
+      fetch('compressed_data.csv.gz')
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to load compressed CSV');
+          return response.arrayBuffer();
+        })
+        .then(buffer => {
+          // Decompress using pako library
+          const decompressedText = pako.inflate(new Uint8Array(buffer), { to: 'string' });
+
+          // Parse decompressed string with PapaParse
+          Papa.parse(decompressedText, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+              productList = results.data;
+              totalCount.innerText = productList.length.toLocaleString();
+              statusBadge.innerText = "READY";
+              statusBadge.style.color = "#15803d";
+              searchInput.disabled = false;
+              searchInput.placeholder = "Search 400k+ products, UPCs, or Item IDs...";
+            }
+          });
+        })
+        .catch(err => {
           statusBadge.innerText = "ERROR";
           statusBadge.style.color = "#dc2626";
-        }
-      });
+          console.error(err);
+        });
     });
 
     function getSearchHistory() {
