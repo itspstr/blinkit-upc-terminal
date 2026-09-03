@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Blinkit Store UPC Terminal Web</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
     :root {
       --blinkit-yellow: #f8c200;
@@ -539,7 +540,8 @@
     let searchCount = 0;
     const defaultChips = ['KitKat', 'Amul Milk', 'Maggi', 'Coca Cola', 'Lays Chips', 'Surf Excel'];
 
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzQAONQQMY0P_YURqkwglUTpPs4s4e-nIXXHGjn42U7AENv8KVhwCf1iycK-hPDFTA/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyFKRkc04t5DM_WPSjhQw7SJqGBi7cEpfXUCF_kwss0Yk35ga_3Du6BTlM-f5sy4ky4/exec';
+    const CSV_FALLBACK = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTj-I2G_5nNlFq-1RkH2vM3lYqV6xL/pub?output=csv';
 
     const searchInput = document.getElementById('searchInput');
     const clearBtn = document.getElementById('clearBtn');
@@ -564,23 +566,54 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       renderRecentChips();
+      loadInventoryData();
+    });
 
-      fetch(API_URL)
-        .then(response => response.json())
+    function loadInventoryData() {
+      // 1. Try Apps Script API first
+      fetch(API_URL, { redirect: 'follow' })
+        .then(res => res.json())
         .then(data => {
-          productList = data;
-          totalCount.innerText = productList.length.toLocaleString();
-          statusBadge.innerText = "READY";
-          statusBadge.style.color = "#15803d";
-          searchInput.disabled = false;
-          searchInput.placeholder = "Search products, UPCs, or Item IDs...";
+          if (data && data.length > 0) {
+            initProducts(data);
+          } else {
+            throw new Error('Empty payload');
+          }
         })
         .catch(err => {
-          statusBadge.innerText = "ERROR";
-          statusBadge.style.color = "#dc2626";
-          console.error("API sync failed:", err);
+          console.warn('Apps Script failed or pending, using CSV fallback...', err);
+          // 2. Fallback to direct CSV parsing via PapaParse
+          Papa.parse("https://docs.google.com/spreadsheets/d/1Hsb99ak1te_2Oww6hCjUo8VBZastiDj30pAzO7RioK4/export?format=csv", {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+              if (results.data && results.data.length > 0) {
+                initProducts(results.data);
+              } else {
+                showErrorStatus();
+              }
+            },
+            error: function() {
+              showErrorStatus();
+            }
+          });
         });
-    });
+    }
+
+    function initProducts(data) {
+      productList = data;
+      totalCount.innerText = productList.length.toLocaleString();
+      statusBadge.innerText = "READY";
+      statusBadge.style.color = "#15803d";
+      searchInput.disabled = false;
+      searchInput.placeholder = "Search products, UPCs, or Item IDs...";
+    }
+
+    function showErrorStatus() {
+      statusBadge.innerText = "ERROR";
+      statusBadge.style.color = "#dc2626";
+    }
 
     function getSearchHistory() {
       const history = localStorage.getItem('blinkit_frequent_searches');
@@ -700,4 +733,17 @@
     function resetSearch() {
       searchInput.value = '';
       clearBtn.style.display = 'none';
-      sugge
+      suggestionsList.classList.remove('active');
+      resultCard.classList.remove('active');
+      idleSection.style.display = 'grid';
+      renderRecentChips();
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+        suggestionsList.classList.remove('active');
+      }
+    });
+  </script>
+</body>
+</html>
