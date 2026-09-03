@@ -36,18 +36,19 @@
     .metric-value { font-size: 14px; font-weight: 900; color: var(--blinkit-green); }
     .metric-label { font-size: 10px; font-weight: 800; color: #334155; text-transform: uppercase; }
 
-    .search-wrapper { position: relative; margin-bottom: 12px; }
-    .search-input-box { width: 100%; height: 52px; padding: 0 110px 0 42px; border-radius: 10px; border: 2px solid #020617; font-size: 14px; font-weight: 800; outline: none; background: #fff; }
-    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; }
-    .clear-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #fee2e2; border: 1.5px solid #ef4444; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 900; color: #991b1b; display: none; cursor: pointer; }
+    .search-container-wrapper { position: relative; margin-bottom: 12px; }
+    .search-wrapper { position: relative; display: flex; align-items: center; width: 100%; }
+    .search-input-box { width: 100%; height: 52px; padding: 0 100px 0 42px; border-radius: 10px; border: 2px solid #020617; font-size: 13px; font-weight: 800; outline: none; background: #fff; }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; z-index: 2; }
+    .clear-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #fee2e2; border: 1.5px solid #ef4444; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 900; color: #991b1b; display: none; cursor: pointer; z-index: 10; }
 
-    .suggestions-list { position: absolute; top: 56px; left: 0; right: 0; background: #fff; border: 2px solid #000; border-radius: 10px; max-height: 360px; overflow-y: auto; z-index: 1000; display: none; }
+    .suggestions-list { position: absolute; top: 56px; left: 0; right: 0; background: #fff; border: 2px solid #000; border-radius: 10px; max-height: 320px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
     .suggestions-list.active { display: block; }
-    .suggestion-item { padding: 10px 14px; border-bottom: 1px solid #cbd5e1; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .suggestion-item { padding: 10px 14px; border-bottom: 1px solid #cbd5e1; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
     .suggestion-item:hover { background-color: #f1f5f9; }
-    .sugg-name { font-size: 13px; font-weight: 800; }
-    .sugg-meta { display: flex; gap: 6px; }
-    .tag-badge { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 800; }
+    .sugg-name { font-size: 12px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .sugg-meta { display: flex; gap: 4px; flex-shrink: 0; }
+    .tag-badge { padding: 2px 5px; border-radius: 4px; font-size: 9px; font-weight: 800; }
     .tag-upc { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
     .tag-itemid { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
     .tag-mrp { background: #fef3c7; color: #b45309; border: 1px solid #fde047; }
@@ -56,18 +57,18 @@
     .widget-box { background: #fff; border: 2px solid #cbd5e1; border-radius: 12px; padding: 14px; }
     .widget-title { font-size: 11px; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; }
     .chip-container { display: flex; flex-direction: column; gap: 6px; }
-    .chip { background: #e2e8f0; border: 1.5px solid #94a3b8; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+    .chip { background: #e2e8f0; border: 1.5px solid #94a3b8; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; text-align: left; }
     .chip:hover { background: #cbd5e1; }
 
     .upc-result-card { background: #fff; border-radius: 12px; border: 2px solid #020617; padding: 16px; display: none; margin-bottom: 12px; }
-    .upc-result-card.active { display: grid; grid-template-columns: 160px 1fr; gap: 16px; align-items: center; }
-    .prod-title { font-size: 16px; font-weight: 900; grid-column: span 2; }
-    .qr-container { background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #cbd5e1; display: flex; justify-content: center; }
+    .upc-result-card.active { display: grid; grid-template-columns: 140px 1fr; gap: 14px; align-items: center; }
+    .prod-title { font-size: 15px; font-weight: 900; grid-column: span 2; line-height: 1.3; }
+    .qr-container { background: #fff; padding: 8px; border-radius: 10px; border: 1px solid #cbd5e1; display: flex; justify-content: center; }
     .data-grid { width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .data-item { background: #f8fafc; border: 1px solid #94a3b8; padding: 8px 10px; border-radius: 8px; display: flex; flex-direction: column; }
     .data-item.full-width { grid-column: span 2; background: #f0fdf4; border-color: #4ade80; }
     .data-label { font-size: 9px; font-weight: 800; color: #334155; text-transform: uppercase; }
-    .data-value { font-size: 13px; font-weight: 800; }
+    .data-value { font-size: 12px; font-weight: 800; word-break: break-all; }
 
     .map-btn-container { margin-top: 14px; text-align: center; }
     .map-link-btn { display: inline-flex; align-items: center; background: var(--blinkit-dark); color: var(--blinkit-yellow); border: 2px solid var(--blinkit-yellow); padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 900; text-decoration: none; text-transform: uppercase; }
@@ -81,6 +82,7 @@
       .idle-section { grid-template-columns: 1fr; }
       .upc-result-card.active { grid-template-columns: 1fr; }
       .prod-title { grid-column: span 1; text-align: center; }
+      .qr-container { justify-content: center; display: flex; }
     }
   </style>
 </head>
@@ -125,10 +127,12 @@
       </div>
     </div>
 
-    <div class="search-wrapper">
-      <span class="search-icon">⚡</span>
-      <input type="text" id="searchInput" class="search-input-box" placeholder="Initializing database..." autocomplete="off" disabled />
-      <button class="clear-btn" id="clearBtn" onclick="resetSearch()">🗑️ Clear All</button>
+    <div class="search-container-wrapper">
+      <div class="search-wrapper">
+        <span class="search-icon">⚡</span>
+        <input type="text" id="searchInput" class="search-input-box" placeholder="Initializing database..." autocomplete="off" disabled />
+        <button class="clear-btn" id="clearBtn" onclick="resetSearch()">🗑️ Clear</button>
+      </div>
       <div class="suggestions-list" id="suggestionsList"></div>
     </div>
 
@@ -138,7 +142,7 @@
       <div class="data-grid">
         <div class="data-item full-width">
           <span class="data-label">🔍 UPC Code</span>
-          <span class="data-value" id="resUPC" style="color:var(--blinkit-green); font-size:15px;">------------</span>
+          <span class="data-value" id="resUPC" style="color:var(--blinkit-green); font-size:14px;">------------</span>
         </div>
         <div class="data-item">
           <span class="data-label">🆔 Item ID</span>
@@ -162,7 +166,7 @@
       </div>
       <div class="widget-box">
         <div class="widget-title">⚡ Terminal Info</div>
-        <div style="font-size: 12px; color: #334155; line-height: 1.5; font-weight: 700;">
+        <div style="font-size: 11px; color: #334155; line-height: 1.5; font-weight: 700;">
           • Complete offline indexing active for catalog items.<br/>
           • Enter product name, UPC barcode, or Item ID above.<br/>
           • Auto-generates scannable QR code instantly.
@@ -189,14 +193,14 @@
     let productList = [];
     let searchCount = 0;
     
-    // Initial frequent searches with emojis
+    // Short labels with emojis for frequent searches
     let frequentSearches = [
-      "🍫 Nestle KitKat Delights Rich Wafer Bar(Pack)",
-      "🥛 Amul Taaza Fresh Milk",
-      "🍜 Maggi Nutrilicious Veg Atta Noodles with Spinach(Pack)",
-      "🥤 Coca-Cola Soft Drink Can",
-      "chips Lays Classic Salted Chips",
-      "🧼 Surf Excel Matic Front Load Liquid Detergent(Pack)"
+      { label: "🍫 KitKat", query: "KitKat" },
+      { label: "🥛 Amul Milk", query: "Amul Taaza" },
+      { label: "🍜 Maggi Noodles", query: "Maggi Nutrilicious" },
+      { label: "🥤 Coca-Cola", query: "Coca-Cola" },
+      { label: "🍟 Lays Chips", query: "Lays Classic" },
+      { label: "🧼 Surf Excel", query: "Surf Excel" }
     ];
 
     const searchInput = document.getElementById('searchInput');
@@ -276,7 +280,7 @@
         statusBadge.innerText = "READY";
         statusBadge.style.color = "#15803d";
         searchInput.disabled = false;
-        searchInput.placeholder = `Search ${productList.length.toLocaleString()} products, UPCs, or Item IDs...`;
+        searchInput.placeholder = `Search ${productList.length.toLocaleString()} products...`;
       } else {
         statusBadge.innerText = "EMPTY";
         statusBadge.style.color = "#dc2626";
@@ -285,22 +289,29 @@
 
     function renderRecentChips() {
       chipContainer.innerHTML = '';
-      frequentSearches.slice(0, 5).forEach(term => {
+      frequentSearches.slice(0, 5).forEach(item => {
         const chip = document.createElement('span');
         chip.className = 'chip';
-        chip.innerText = term;
+        chip.innerText = item.label;
         chip.onclick = () => {
-          searchInput.value = term;
-          searchInput.dispatchEvent(new Event('input'));
+          // Find first matching product for this short term and select it directly
+          const found = productList.find(p => (p.name || '').toLowerCase().includes(item.query.toLowerCase()));
+          if (found) {
+            selectProduct(found.upc || found.item_id);
+          } else {
+            searchInput.value = item.query;
+            searchInput.dispatchEvent(new Event('input'));
+          }
         };
         chipContainer.appendChild(chip);
       });
     }
 
     function updateFrequentSearches(productName) {
-      // Remove if already exists to prevent duplicates, then add to top
-      frequentSearches = frequentSearches.filter(item => item !== productName);
-      frequentSearches.unshift("📦 " + productName);
+      // Create a short label from the product name
+      const shortName = productName.length > 22 ? productName.substring(0, 20) + '...' : productName;
+      frequentSearches = frequentSearches.filter(item => item.label !== "📦 " + shortName);
+      frequentSearches.unshift({ label: "📦 " + shortName, query: productName });
       renderRecentChips();
     }
 
@@ -345,7 +356,7 @@
       }, 80);
     });
 
-    const qrCode = new QRCode(document.getElementById("qrcode"), { width: 140, height: 140, correctLevel: QRCode.CorrectLevel.L });
+    const qrCode = new QRCode(document.getElementById("qrcode"), { width: 130, height: 130, correctLevel: QRCode.CorrectLevel.L });
     const resTitle = document.getElementById('resTitle');
     const resUPC = document.getElementById('resUPC');
     const resItemId = document.getElementById('resItemId');
@@ -356,10 +367,10 @@
       const match = productList.find(item => item.upc === id || item.item_id === id);
       if (match) {
         searchInput.value = match.name;
+        clearBtn.style.display = 'inline-flex';
         suggestionsList.classList.remove('active');
         idleSection.style.display = 'none';
 
-        // Update dynamic frequent/recent searches list
         updateFrequentSearches(match.name || 'Unnamed Product');
 
         searchCount++;
