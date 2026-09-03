@@ -6,7 +6,6 @@
   <title>Blinkit Store UPC Terminal Web</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
   <style>
     :root {
       --blinkit-yellow: #f8c200;
@@ -90,9 +89,7 @@
       align-items: center;
     }
 
-    .header-title-group {
-      text-align: left;
-    }
+    .header-title-group { text-align: left; }
 
     .header-title {
       color: var(--blinkit-yellow);
@@ -189,9 +186,7 @@
       color: #020617;
     }
 
-    .search-input-box:focus {
-      border-color: var(--blinkit-green);
-    }
+    .search-input-box:focus { border-color: var(--blinkit-green); }
 
     .search-icon {
       position: absolute;
@@ -234,9 +229,7 @@
       display: none;
     }
 
-    .suggestions-list.active {
-      display: block;
-    }
+    .suggestions-list.active { display: block; }
 
     .suggestion-item {
       padding: 12px 16px;
@@ -247,13 +240,7 @@
       align-items: center;
     }
 
-    .suggestion-item:hover {
-      background-color: #f1f5f9;
-    }
-
-    .suggestion-item:last-child {
-      border-bottom: none;
-    }
+    .suggestion-item:hover { background-color: #f1f5f9; }
 
     .sugg-name {
       font-size: 14px;
@@ -261,10 +248,7 @@
       color: #020617;
     }
 
-    .sugg-meta {
-      display: flex;
-      gap: 8px;
-    }
+    .sugg-meta { display: flex; gap: 8px; }
 
     .tag-badge {
       padding: 3px 8px;
@@ -407,42 +391,14 @@
     footer .brand-tag { color: var(--blinkit-green); font-weight: 900; }
 
     @media (max-width: 768px) {
-      body {
-        padding-top: max(env(safe-area-inset-top), 40px);
-      }
-      
-      .header-banner {
-        flex-direction: column;
-        gap: 8px;
-        text-align: center;
-      }
-
-      .header-title-group {
-        text-align: center;
-      }
-
-      .header-title {
-        font-size: 16px;
-      }
-
-      .idle-section {
-        grid-template-columns: 1fr;
-      }
-
-      .upc-result-card.active {
-        grid-template-columns: 1fr;
-      }
-
-      .prod-title {
-        grid-column: span 1;
-        text-align: center;
-      }
-
-      .suggestion-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-      }
+      body { padding-top: max(env(safe-area-inset-top), 40px); }
+      .header-banner { flex-direction: column; gap: 8px; text-align: center; }
+      .header-title-group { text-align: center; }
+      .header-title { font-size: 16px; }
+      .idle-section { grid-template-columns: 1fr; }
+      .upc-result-card.active { grid-template-columns: 1fr; }
+      .prod-title { grid-column: span 1; text-align: center; }
+      .suggestion-item { flex-direction: column; align-items: flex-start; gap: 6px; }
     }
   </style>
 </head>
@@ -451,11 +407,8 @@
   <div class="ticker-bar">
     <div class="ticker-track">
       <span class="ticker-item">⚡ ULTRA-FAST INVENTORY SEARCH</span>
-      <span class="ticker-item">📦 403,229+ ITEMS EMBEDDED</span>
-      <span class="ticker-item">🟢 100% OFFLINE SCANNER ACTIVE</span>
-      <span class="ticker-item">⚡ ULTRA-FAST INVENTORY SEARCH</span>
-      <span class="ticker-item">📦 403,229+ ITEMS EMBEDDED</span>
-      <span class="ticker-item">🟢 100% OFFLINE SCANNER ACTIVE</span>
+      <span class="ticker-item">📦 GOOGLE SHEETS LIVE DATA</span>
+      <span class="ticker-item">🟢 ONLINE TERMINAL ACTIVE</span>
     </div>
   </div>
 
@@ -467,7 +420,7 @@
       </div>
       <div class="live-badge">
         <span class="live-dot"></span>
-        EMBEDDED DATA ACTIVE
+        SHEETS BACKEND ACTIVE
       </div>
     </div>
   </header>
@@ -490,7 +443,7 @@
 
     <div class="search-wrapper">
       <span class="search-icon">⚡</span>
-      <input type="text" id="searchInput" class="search-input-box" placeholder="Loading 400k+ products..." autocomplete="off" disabled />
+      <input type="text" id="searchInput" class="search-input-box" placeholder="Loading products from Google Sheets..." autocomplete="off" disabled />
       <button class="clear-btn" id="clearBtn" onclick="resetSearch()">🗑️ Clear All</button>
       <div class="suggestions-list" id="suggestionsList"></div>
     </div>
@@ -534,7 +487,7 @@
       <div class="widget-box">
         <div class="widget-title">⚡ Terminal Info</div>
         <div style="font-size: 13px; color: #334155; line-height: 1.6; font-weight: 700;">
-          • Complete offline indexing active for <strong>403,229 items</strong>.<br/>
+          • Connected directly to Google Sheets.<br/>
           • Enter product name, UPC barcode, or Item ID above.<br/>
           • Auto-generates scannable QR code instantly.
         </div>
@@ -551,6 +504,9 @@
     let productList = [];
     let searchCount = 0;
     const defaultChips = ['KitKat', 'Amul Milk', 'Maggi', 'Coca Cola', 'Lays Chips', 'Surf Excel'];
+
+    // Direct Google Sheet CSV Export Endpoint
+    const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1Hsb99ak1te_2Oww6hCjUo8VBZastiDj30pAzO7RioK4/export?format=csv';
 
     const searchInput = document.getElementById('searchInput');
     const clearBtn = document.getElementById('clearBtn');
@@ -576,35 +532,24 @@
     window.addEventListener('DOMContentLoaded', () => {
       renderRecentChips();
 
-      // Fetch and decompress compressed_data.csv.gz
-      fetch('compressed_data.csv.gz')
-        .then(response => {
-          if (!response.ok) throw new Error('Failed to load compressed CSV');
-          return response.arrayBuffer();
-        })
-        .then(buffer => {
-          // Decompress using pako library
-          const decompressedText = pako.inflate(new Uint8Array(buffer), { to: 'string' });
-
-          // Parse decompressed string with PapaParse
-          Papa.parse(decompressedText, {
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-              productList = results.data;
-              totalCount.innerText = productList.length.toLocaleString();
-              statusBadge.innerText = "READY";
-              statusBadge.style.color = "#15803d";
-              searchInput.disabled = false;
-              searchInput.placeholder = "Search 400k+ products, UPCs, or Item IDs...";
-            }
-          });
-        })
-        .catch(err => {
+      Papa.parse(GOOGLE_SHEET_CSV_URL, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          productList = results.data;
+          totalCount.innerText = productList.length.toLocaleString();
+          statusBadge.innerText = "READY";
+          statusBadge.style.color = "#15803d";
+          searchInput.disabled = false;
+          searchInput.placeholder = "Search products, UPCs, or Item IDs...";
+        },
+        error: function(err) {
           statusBadge.innerText = "ERROR";
           statusBadge.style.color = "#dc2626";
-          console.error(err);
-        });
+          console.error("Failed to load Google Sheet CSV:", err);
+        }
+      });
     });
 
     function getSearchHistory() {
@@ -615,12 +560,9 @@
     function saveToHistory(term) {
       if (!term || term.trim().length < 2) return;
       let history = getSearchHistory();
-      
       history = history.filter(item => item.toLowerCase() !== term.toLowerCase());
       history.unshift(term);
-
       if (history.length > 6) history.pop();
-
       localStorage.setItem('blinkit_frequent_searches', JSON.stringify(history));
       renderRecentChips();
     }
@@ -628,7 +570,6 @@
     function renderRecentChips() {
       const history = getSearchHistory();
       const chipsToDisplay = history.length > 0 ? history : defaultChips;
-
       chipContainer.innerHTML = '';
       chipsToDisplay.forEach(term => {
         const chip = document.createElement('span');
@@ -643,7 +584,6 @@
     searchInput.addEventListener('input', (e) => {
       clearTimeout(debounceTimer);
       const query = e.target.value.trim().toLowerCase();
-
       clearBtn.style.display = query ? 'inline-flex' : 'none';
 
       if (!query || productList.length === 0) {
@@ -653,9 +593,7 @@
         return;
       }
 
-      debounceTimer = setTimeout(() => {
-        showSuggestions(query);
-      }, 80);
+      debounceTimer = setTimeout(() => showSuggestions(query), 80);
     });
 
     function quickSearch(term) {
@@ -702,7 +640,6 @@
 
     function selectProduct(identifier) {
       const match = productList.find(item => item.upc === identifier || item.item_id === identifier);
-
       if (match) {
         searchInput.value = match.name;
         suggestionsList.classList.remove('active');
@@ -710,7 +647,6 @@
         idleSection.style.display = 'none';
         
         saveToHistory(match.name);
-
         searchCount++;
         document.getElementById('scannedCount').innerText = searchCount;
 
@@ -726,9 +662,7 @@
       resUOM.innerText = match.variant_uom_text || 'N/A';
 
       qrCode.clear();
-      if (match.upc) {
-        qrCode.makeCode(match.upc);
-      }
+      if (match.upc) qrCode.makeCode(match.upc);
 
       resultCard.classList.add('active');
     }
