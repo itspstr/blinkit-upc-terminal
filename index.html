@@ -55,8 +55,9 @@
     .idle-section { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .widget-box { background: #fff; border: 2px solid #cbd5e1; border-radius: 12px; padding: 14px; }
     .widget-title { font-size: 11px; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; }
-    .chip-container { display: flex; flex-wrap: wrap; gap: 6px; }
-    .chip { background: #e2e8f0; border: 1.5px solid #94a3b8; padding: 6px 12px; border-radius: 18px; font-size: 11px; font-weight: 800; cursor: pointer; }
+    .chip-container { display: flex; flex-direction: column; gap: 6px; }
+    .chip { background: #e2e8f0; border: 1.5px solid #94a3b8; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+    .chip:hover { background: #cbd5e1; }
 
     .upc-result-card { background: #fff; border-radius: 12px; border: 2px solid #020617; padding: 16px; display: none; margin-bottom: 12px; }
     .upc-result-card.active { display: grid; grid-template-columns: 160px 1fr; gap: 16px; align-items: center; }
@@ -89,10 +90,10 @@
     <div class="ticker-track">
       <span class="ticker-item">⚡ ULTRA-FAST INVENTORY SEARCH</span>
       <span class="ticker-item">📦 ENTERPRISE CLOUD SYNC</span>
-      <span class="ticker-item">🟢 CLOUD TERMINAL ACTIVE</span>
+      <span class="ticker-item">🟢 EMBEDDED DATA ACTIVE</span>
       <span class="ticker-item">⚡ ULTRA-FAST INVENTORY SEARCH</span>
       <span class="ticker-item">📦 ENTERPRISE CLOUD SYNC</span>
-      <span class="ticker-item">🟢 CLOUD TERMINAL ACTIVE</span>
+      <span class="ticker-item">🟢 EMBEDDED DATA ACTIVE</span>
     </div>
   </div>
 
@@ -103,7 +104,7 @@
         <div class="header-subtitle">SS, George Town, Prayagraj — Inventory Search</div>
       </div>
       <div class="live-badge">
-        <span class="live-dot"></span> CLOUD DATABASE ACTIVE
+        <span class="live-dot"></span> EMBEDDED DATA ACTIVE
       </div>
     </div>
   </header>
@@ -126,7 +127,7 @@
 
     <div class="search-wrapper">
       <span class="search-icon">⚡</span>
-      <input type="text" id="searchInput" class="search-input-box" placeholder="Initializing files..." autocomplete="off" disabled />
+      <input type="text" id="searchInput" class="search-input-box" placeholder="Initializing database..." autocomplete="off" disabled />
       <button class="clear-btn" id="clearBtn" onclick="resetSearch()">🗑️ Clear All</button>
       <div class="suggestions-list" id="suggestionsList"></div>
     </div>
@@ -162,7 +163,7 @@
       <div class="widget-box">
         <div class="widget-title">⚡ Terminal Info</div>
         <div style="font-size: 12px; color: #334155; line-height: 1.5; font-weight: 700;">
-          • Multi-part CSV loaded via GitHub relative path.<br/>
+          • Complete offline indexing active for catalog items.<br/>
           • Enter product name, UPC barcode, or Item ID above.<br/>
           • Auto-generates scannable QR code instantly.
         </div>
@@ -187,7 +188,16 @@
 
     let productList = [];
     let searchCount = 0;
-    const defaultChips = ['KitKat', 'Amul Milk', 'Maggi', 'Coca Cola', 'Lays Chips', 'Surf Excel'];
+    
+    // Initial frequent searches with emojis
+    let frequentSearches = [
+      "🍫 Nestle KitKat Delights Rich Wafer Bar(Pack)",
+      "🥛 Amul Taaza Fresh Milk",
+      "🍜 Maggi Nutrilicious Veg Atta Noodles with Spinach(Pack)",
+      "🥤 Coca-Cola Soft Drink Can",
+      "chips Lays Classic Salted Chips",
+      "🧼 Surf Excel Matic Front Load Liquid Detergent(Pack)"
+    ];
 
     const searchInput = document.getElementById('searchInput');
     const clearBtn = document.getElementById('clearBtn');
@@ -205,7 +215,7 @@
 
     function parseCSVFile(filePath, label) {
       return new Promise((resolve, reject) => {
-        statusBadge.innerText = `DOWNLOADING ${label}`;
+        statusBadge.innerText = `LOADING ${label}`;
         Papa.parse(filePath, {
           download: true,
           skipEmptyLines: true,
@@ -236,7 +246,7 @@
       } catch (err) {
         statusBadge.innerText = "FAILED";
         statusBadge.style.color = "#dc2626";
-        searchInput.placeholder = "Error: Check file names or GitHub paths!";
+        searchInput.placeholder = "Error loading database files!";
       }
     }
 
@@ -266,7 +276,7 @@
         statusBadge.innerText = "READY";
         statusBadge.style.color = "#15803d";
         searchInput.disabled = false;
-        searchInput.placeholder = "Search products, UPCs, or Item IDs...";
+        searchInput.placeholder = `Search ${productList.length.toLocaleString()} products, UPCs, or Item IDs...`;
       } else {
         statusBadge.innerText = "EMPTY";
         statusBadge.style.color = "#dc2626";
@@ -275,7 +285,7 @@
 
     function renderRecentChips() {
       chipContainer.innerHTML = '';
-      defaultChips.forEach(term => {
+      frequentSearches.slice(0, 5).forEach(term => {
         const chip = document.createElement('span');
         chip.className = 'chip';
         chip.innerText = term;
@@ -285,6 +295,13 @@
         };
         chipContainer.appendChild(chip);
       });
+    }
+
+    function updateFrequentSearches(productName) {
+      // Remove if already exists to prevent duplicates, then add to top
+      frequentSearches = frequentSearches.filter(item => item !== productName);
+      frequentSearches.unshift("📦 " + productName);
+      renderRecentChips();
     }
 
     let debounceTimer;
@@ -341,6 +358,9 @@
         searchInput.value = match.name;
         suggestionsList.classList.remove('active');
         idleSection.style.display = 'none';
+
+        // Update dynamic frequent/recent searches list
+        updateFrequentSearches(match.name || 'Unnamed Product');
 
         searchCount++;
         document.getElementById('scannedCount').innerText = searchCount;
